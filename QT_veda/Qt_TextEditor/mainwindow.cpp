@@ -25,7 +25,22 @@ MainWindow::MainWindow(QWidget *parent)
         qDebug() << "let's see";
         qApp->quit();});
 
+    QAction *undoAct = makeAction(":icons/undo.png", tr("Undo"), QKeySequence::Undo, tr("undo"), [textedit](){textedit->undo();});
+    QAction *redoAct = makeAction(":icons/redo.png", tr("Redo"), QKeySequence::Redo, tr("redo"), [textedit](){textedit->redo();});
+    QAction *copyAct = makeAction(":icons/copy.png", tr("Copy"),QKeySequence::Copy, tr("copy"), [textedit](){textedit->copy();});
+    QAction *cutAct = makeAction(":icons/cut.png", tr("Cut"), QKeySequence::Cut, tr("cut"), [textedit](){textedit->cut();}) ;
+    QAction *pasteAct = makeAction(":icons/paste.png", tr("Paste"), QKeySequence::Paste, tr("paste"), [textedit](){textedit->paste();}) ;
+    QAction *zoomInAct = makeAction(":icons/zoomin.png", tr("Zoom in"),QKeySequence::ZoomIn, tr("zoom in"), [textedit](){textedit->zoomIn(1);} );
+    QAction *zoomOutAct = makeAction(":icons/zoomout.png", tr("Zoom out"),QKeySequence::ZoomOut, tr("zoom out"), [textedit](){textedit->zoomOut(1);} );
 
+    QAction *alignCenterAct = new QAction("&Center", this);
+    connect(alignCenterAct, &QAction::triggered, this, [textedit]{ textedit->setAlignment(Qt::AlignCenter); });
+    QAction *alignLeftAct = new QAction("&Left", this);
+    connect(alignLeftAct, &QAction::triggered, this, [textedit]{ textedit->setAlignment(Qt::AlignLeft); });
+    QAction *alignRightAct = new QAction("&Right", this);
+    connect(alignRightAct, &QAction::triggered, this, [textedit]{ textedit->setAlignment(Qt::AlignRight); });
+    QAction *alignJustifyAct = new QAction("&Justify", this);
+    connect(alignJustifyAct, &QAction::triggered, this, [textedit] {textedit->setAlignment(Qt::AlignJustify); });
 
     // Create a ToolBar
     QToolBar *fileToolBar = addToolBar("&File");
@@ -37,6 +52,8 @@ MainWindow::MainWindow(QWidget *parent)
     fileToolBar->addSeparator();
     // Add action to the ToolBar
     fileToolBar->addAction(quitAct);
+    fileToolBar->addSeparator();
+
 
 
     //add StatusBar
@@ -76,14 +93,20 @@ MainWindow::MainWindow(QWidget *parent)
     toolbarMenu->addAction(fileToolBar->toggleViewAction());
 
     QMenu *editMenu = menubar->addMenu("&Edit");
-    editMenu->addAction(makeAction(":icons/undo.png", tr("Undo"), QKeySequence::Undo, tr("undo"), [textedit](){textedit->undo();} ));
-    editMenu->addAction(makeAction(":icons/undo.png", tr("Redo"), QKeySequence::Redo, tr("redo"), [textedit](){textedit->redo();} ));
-    editMenu->addAction(makeAction(":icons/undo.png", tr("Copy"),QKeySequence::Copy, tr("copy"), [textedit](){textedit->copy();} ));
-    editMenu->addAction(makeAction(":icons/undo.png", tr("Cut"), QKeySequence::Cut, tr("cut"), [textedit](){textedit->cut();} ));
-    editMenu->addAction(makeAction(":icons/undo.png", tr("Paste"), QKeySequence::Paste, tr("paste"), [textedit](){textedit->paste();} ));
-    editMenu->addAction(makeAction(":icons/undo.png", tr("Zoom in"),QKeySequence::ZoomIn, tr("zoom in"), [textedit](){textedit->zoomIn(1);} ));
-    editMenu->addAction(makeAction(":icons/undo.png", tr("Zoom out"),QKeySequence::ZoomOut, tr("zoom out"), [textedit](){textedit->zoomOut(1);} ));
+    editMenu->addAction(undoAct);
+    editMenu->addAction(redoAct);
+    editMenu->addAction(copyAct);
+    editMenu->addAction(cutAct);
+    editMenu->addAction(pasteAct);
+    editMenu->addAction(zoomInAct);
+    editMenu->addAction(zoomOutAct);
+    editMenu->addSeparator();
 
+    QMenu *alignMenu = editMenu->addMenu("&Align");
+    alignMenu->addAction(alignCenterAct);
+    alignMenu->addAction(alignLeftAct);
+    alignMenu->addAction(alignRightAct);
+    alignMenu->addAction(alignJustifyAct);
 
 
 }
