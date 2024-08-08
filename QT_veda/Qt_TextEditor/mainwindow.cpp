@@ -5,6 +5,9 @@
 #include <QAction>
 #include <QApplication>
 #include <QToolBar>
+#include <QFontComboBox>
+#include <QDoubleSpinBox>
+#include <QtTypes>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -31,6 +34,20 @@ MainWindow::MainWindow(QWidget *parent)
     fileToolBar->addSeparator();
     // Add action to the ToolBar
     fileToolBar->addAction(quitAct);
+
+
+    //add widget to the toolbar
+    QFontComboBox *fontComboBox = new QFontComboBox(this);
+    connect(fontComboBox, SIGNAL(currentFontChanged(QFont)), textedit, SLOT(setCurrentFont(QFont)));
+    QDoubleSpinBox *sizeSpinBox = new QDoubleSpinBox(this);
+    connect(sizeSpinBox, SIGNAL(valueChanged(double)), textedit, SLOT(setFontPointSize(qreal)));
+
+    addToolBarBreak();
+
+    QToolBar *formatToolbar = addToolBar("&Format");
+    formatToolbar->addWidget(fontComboBox);
+    formatToolbar->addWidget(sizeSpinBox);
+
 
     // Create a menu bar
     QMenuBar* menubar = this->menuBar();
