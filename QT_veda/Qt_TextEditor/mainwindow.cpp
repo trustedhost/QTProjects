@@ -4,6 +4,7 @@
 #include <QMenu>
 #include <QAction>
 #include <QApplication>
+#include <QToolBar>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -12,26 +13,38 @@ MainWindow::MainWindow(QWidget *parent)
     QTextEdit* textedit = new QTextEdit(this);
     setCentralWidget(textedit);
 
-    // Create a menu bar
-    QMenuBar* menubar = this->menuBar();
-
     // Create an Action
-    // QAction *newAct = makeAction("new.png", "&New", "Ctrl+N", "make new file", this, SLOT(newFile()));
-    QAction *newAct = makeAction("new.png", tr("&New"), QKeySequence::New, tr("make new file"), this, SLOT(newFile()));
-    // QAction *newAct = new QAction(QIcon("new.png"), "&New", this);
-    // newAct->setShortcut(tr("Ctrl+N"));
-    // newAct->setStatusTip(tr("make new file"));
-    // connect(newAct, SIGNAL(triggered()), SLOT(newFile()));
-
-    // QAction *quitAct = makeAction("quit.png", tr("&Quit"), tr("Ctrl+Q"), tr("Quit this program"), qApp, SLOT(quit()));
-    QAction *quitAct = makeAction("quit.png", tr("&Quit"), tr("Ctrl+Q"), tr("Quit this program"), [](){
+    QAction *newAct = makeAction(":icons/new.png", tr("&New"), QKeySequence::New, tr("make new file"), this, SLOT(newFile()));
+    QAction *quitAct = makeAction(":icons/quit.png", tr("&Quit"), tr("Ctrl+Q"), tr("Quit this program"), [](){
         qDebug() << "let's see";
         qApp->quit();});
 
-    // Add an Action to the menu bar
+
+
+    // Create a ToolBar
+    QToolBar *fileToolBar = addToolBar("&File");
+    fileToolBar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+
+    // Add action to the ToolBar
+    fileToolBar->addAction(newAct);
+    // Add seperator to the Toolbar
+    fileToolBar->addSeparator();
+    // Add action to the ToolBar
+    fileToolBar->addAction(quitAct);
+
+    // Create a menu bar
+    QMenuBar* menubar = this->menuBar();
+
+    // Add Actions to the menu bar
     QMenu *fileMenu = menubar->addMenu("&File");
     fileMenu->addAction(newAct);
     fileMenu->addAction(quitAct);
+
+    // Add the ToolBar to the MenuBar
+    QMenu *windowMenu = menubar->addMenu("&Window");
+    QMenu *toolbarMenu = windowMenu->addMenu("&Toolbar");
+    toolbarMenu->addAction(fileToolBar->toggleViewAction());
+
 }
 
 MainWindow::~MainWindow() {}
