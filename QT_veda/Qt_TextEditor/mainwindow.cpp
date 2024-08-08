@@ -10,14 +10,22 @@
 #include <QtTypes>
 #include <QStatusBar>
 #include <QLabel>
+#include <QMdiArea>
+#include <QMdiSubWindow>
 
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     // Create a QTextEdit widget and set it as the central widget
-    textedit = new QTextEdit(this);
-    setCentralWidget(textedit);
+    mdiArea = new QMdiArea(this);
+    setCentralWidget(mdiArea);
+#if 1 // edit 메뉴를 수정한 후 0으로 변경 (test 기법임. 0과 1 을 바꿔가면서 테스팅 할 수 있는거임. )
+    QTextEdit *textedit = new QTextEdit(this);
+    mdiArea->addSubWindow(textedit);
+#else
+    QTextEdit *textedit = newFile();
+#endif
 
     // Create an Action
     QAction *newAct = makeAction(":icons/new.png", tr("&New"), QKeySequence::New, tr("make new file"), this, SLOT(newFile()));
@@ -25,13 +33,13 @@ MainWindow::MainWindow(QWidget *parent)
         qDebug() << "let's see";
         qApp->quit();});
 
-    QAction *undoAct = makeAction(":icons/undo.png", tr("Undo"), QKeySequence::Undo, tr("undo"), [this](){textedit->undo();});
-    QAction *redoAct = makeAction(":icons/redo.png", tr("Redo"), QKeySequence::Redo, tr("redo"), [this](){textedit->redo();});
-    QAction *copyAct = makeAction(":icons/copy.png", tr("Copy"),QKeySequence::Copy, tr("copy"), [this](){textedit->copy();});
-    QAction *cutAct = makeAction(":icons/cut.png", tr("Cut"), QKeySequence::Cut, tr("cut"), [this](){textedit->cut();}) ;
-    QAction *pasteAct = makeAction(":icons/paste.png", tr("Paste"), QKeySequence::Paste, tr("paste"), [this](){textedit->paste();}) ;
-    QAction *zoomInAct = makeAction(":icons/zoomin.png", tr("Zoom in"),QKeySequence::ZoomIn, tr("zoom in"), [this](){textedit->zoomIn(1);} );
-    QAction *zoomOutAct = makeAction(":icons/zoomout.png", tr("Zoom out"),QKeySequence::ZoomOut, tr("zoom out"), [this](){textedit->zoomOut(1);} );
+    QAction *undoAct = makeAction(":icons/undo.png", tr("Undo"), QKeySequence::Undo, tr("undo"), [textedit](){textedit->undo();});
+    QAction *redoAct = makeAction(":icons/redo.png", tr("Redo"), QKeySequence::Redo, tr("redo"), [textedit](){textedit->redo();});
+    QAction *copyAct = makeAction(":icons/copy.png", tr("Copy"),QKeySequence::Copy, tr("copy"), [textedit](){textedit->copy();});
+    QAction *cutAct = makeAction(":icons/cut.png", tr("Cut"), QKeySequence::Cut, tr("cut"), [textedit](){textedit->cut();}) ;
+    QAction *pasteAct = makeAction(":icons/paste.png", tr("Paste"), QKeySequence::Paste, tr("paste"), [textedit](){textedit->paste();}) ;
+    QAction *zoomInAct = makeAction(":icons/zoomin.png", tr("Zoom in"),QKeySequence::ZoomIn, tr("zoom in"), [textedit](){textedit->zoomIn(1);} );
+    QAction *zoomOutAct = makeAction(":icons/zoomout.png", tr("Zoom out"),QKeySequence::ZoomOut, tr("zoom out"), [textedit](){textedit->zoomOut(1);} );
 
     QAction *alignCenterAct = new QAction("&Center", this);
     connect(alignCenterAct, SIGNAL(triggered()), SLOT(alignText()));
@@ -68,9 +76,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     //add widget to the toolbar
     QFontComboBox *fontComboBox = new QFontComboBox(this);
-    connect(fontComboBox, SIGNAL(currentFontChanged(QFont)), textedit, SLOT(setCurrentFont(QFont)));
+    connect(fontComboBox, SIGNAL(currentFontChanged(QFont)), SLOT(setTextFont(QFont)));
     QDoubleSpinBox *sizeSpinBox = new QDoubleSpinBox(this);
-    connect(sizeSpinBox, SIGNAL(valueChanged(double)), textedit, SLOT(setFontPointSize(qreal)));
+    connect(sizeSpinBox, SIGNAL(valueChanged(qreal)), SLOT(setTextSize(qreal)));
 
     addToolBarBreak();
 
@@ -113,6 +121,15 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow() {}
 
+QTextEdit *MainWindow::newFile()
+{
+    qDebug() << "Make new file";
+    QTextEdit *textedit = new QTextEdit;
+    mdiArea->addSubWindow(textedit);
+    textedit->show();
+    return textedit;
+}
+
 template <typename T>
 QAction *MainWindow::makeAction(QString icon, QString text, T shortCut, QString toolTip, QObject *recv, const char *slot)
 {
@@ -149,13 +166,9 @@ QAction *MainWindow::makeAction(QString icon, QString text, T shortCut, QString 
 
 }
 
-void MainWindow::newFile()
-{
-    qDebug() << "make new File";
-}
-
 void MainWindow::alignText()
 {
+    QTextEdit *textedit = qobject_cast<QTextEdit*>(mdiArea->currentSubWindow()->widget());
     QAction *action = qobject_cast<QAction*>(sender());
     if(action->text().contains("Left", Qt::CaseInsensitive)) {
         textedit->setAlignment(Qt::AlignLeft);
@@ -166,4 +179,18 @@ void MainWindow::alignText()
     } else if (action->text().contains("Justify", Qt::CaseInsensitive)) {
         textedit->setAlignment(Qt::AlignJustify);
     }
+}
+
+void MainWindow::setTextFont(QFont font)
+{
+    QTextEdit *textedit = qobject_cast<QTextEdit*>(mdiArea->currentSubWindow()->widget());
+    textedit->setCurrentFont(font);
+}
+
+void MainWindow::setTextSize(qreal size)
+{
+    QTextEdit *textedit = qobject_cast<QTextEdit*>(mdiArea->currentSubWindow()->widget());
+    QFont font = textedit->currentFont();
+    font.setPointSizeF(size);
+    textedit->setCurrentFont(font);
 }

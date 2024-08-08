@@ -3,7 +3,9 @@
 
 #include <QMainWindow>
 
+class QLabel;
 class QTextEdit;
+class QMdiArea;
 
 class MainWindow : public QMainWindow
 {
@@ -20,11 +22,14 @@ private:
     template <typename T, typename Functor>
     QAction *makeAction(QString icon, QString text, T shortCut, \
                         QString toolTip, Functor lambda);
-    QTextEdit* textedit;
+    // QTextEdit* textedit;
+    QMdiArea* mdiArea;
 
 public slots:
-    void newFile();
+    QTextEdit *newFile();
     void alignText();
+    void setTextFont(QFont font);
+    void setTextSize(qreal size);
 
 };
 #endif // MAINWINDOW_H
