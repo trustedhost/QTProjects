@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 
+class QTextEdit;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -18,8 +20,11 @@ private:
     template <typename T, typename Functor>
     QAction *makeAction(QString icon, QString text, T shortCut, \
                         QString toolTip, Functor lambda);
+    QTextEdit* textedit;
 
 public slots:
     void newFile();
+    void alignText();
+
 };
 #endif // MAINWINDOW_H

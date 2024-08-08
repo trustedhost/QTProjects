@@ -16,7 +16,7 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     // Create a QTextEdit widget and set it as the central widget
-    QTextEdit* textedit = new QTextEdit(this);
+    textedit = new QTextEdit(this);
     setCentralWidget(textedit);
 
     // Create an Action
@@ -25,22 +25,22 @@ MainWindow::MainWindow(QWidget *parent)
         qDebug() << "let's see";
         qApp->quit();});
 
-    QAction *undoAct = makeAction(":icons/undo.png", tr("Undo"), QKeySequence::Undo, tr("undo"), [textedit](){textedit->undo();});
-    QAction *redoAct = makeAction(":icons/redo.png", tr("Redo"), QKeySequence::Redo, tr("redo"), [textedit](){textedit->redo();});
-    QAction *copyAct = makeAction(":icons/copy.png", tr("Copy"),QKeySequence::Copy, tr("copy"), [textedit](){textedit->copy();});
-    QAction *cutAct = makeAction(":icons/cut.png", tr("Cut"), QKeySequence::Cut, tr("cut"), [textedit](){textedit->cut();}) ;
-    QAction *pasteAct = makeAction(":icons/paste.png", tr("Paste"), QKeySequence::Paste, tr("paste"), [textedit](){textedit->paste();}) ;
-    QAction *zoomInAct = makeAction(":icons/zoomin.png", tr("Zoom in"),QKeySequence::ZoomIn, tr("zoom in"), [textedit](){textedit->zoomIn(1);} );
-    QAction *zoomOutAct = makeAction(":icons/zoomout.png", tr("Zoom out"),QKeySequence::ZoomOut, tr("zoom out"), [textedit](){textedit->zoomOut(1);} );
+    QAction *undoAct = makeAction(":icons/undo.png", tr("Undo"), QKeySequence::Undo, tr("undo"), [this](){textedit->undo();});
+    QAction *redoAct = makeAction(":icons/redo.png", tr("Redo"), QKeySequence::Redo, tr("redo"), [this](){textedit->redo();});
+    QAction *copyAct = makeAction(":icons/copy.png", tr("Copy"),QKeySequence::Copy, tr("copy"), [this](){textedit->copy();});
+    QAction *cutAct = makeAction(":icons/cut.png", tr("Cut"), QKeySequence::Cut, tr("cut"), [this](){textedit->cut();}) ;
+    QAction *pasteAct = makeAction(":icons/paste.png", tr("Paste"), QKeySequence::Paste, tr("paste"), [this](){textedit->paste();}) ;
+    QAction *zoomInAct = makeAction(":icons/zoomin.png", tr("Zoom in"),QKeySequence::ZoomIn, tr("zoom in"), [this](){textedit->zoomIn(1);} );
+    QAction *zoomOutAct = makeAction(":icons/zoomout.png", tr("Zoom out"),QKeySequence::ZoomOut, tr("zoom out"), [this](){textedit->zoomOut(1);} );
 
     QAction *alignCenterAct = new QAction("&Center", this);
-    connect(alignCenterAct, &QAction::triggered, this, [textedit]{ textedit->setAlignment(Qt::AlignCenter); });
+    connect(alignCenterAct, SIGNAL(triggered()), SLOT(alignText()));
     QAction *alignLeftAct = new QAction("&Left", this);
-    connect(alignLeftAct, &QAction::triggered, this, [textedit]{ textedit->setAlignment(Qt::AlignLeft); });
+    connect(alignLeftAct, SIGNAL(triggered()), SLOT(alignText()));
     QAction *alignRightAct = new QAction("&Right", this);
-    connect(alignRightAct, &QAction::triggered, this, [textedit]{ textedit->setAlignment(Qt::AlignRight); });
+    connect(alignRightAct, SIGNAL(triggered()), SLOT(alignText()));
     QAction *alignJustifyAct = new QAction("&Justify", this);
-    connect(alignJustifyAct, &QAction::triggered, this, [textedit] {textedit->setAlignment(Qt::AlignJustify); });
+    connect(alignJustifyAct, SIGNAL(triggered()), SLOT(alignText()));
 
     // Create a ToolBar
     QToolBar *fileToolBar = addToolBar("&File");
@@ -152,4 +152,18 @@ QAction *MainWindow::makeAction(QString icon, QString text, T shortCut, QString 
 void MainWindow::newFile()
 {
     qDebug() << "make new File";
+}
+
+void MainWindow::alignText()
+{
+    QAction *action = qobject_cast<QAction*>(sender());
+    if(action->text().contains("Left", Qt::CaseInsensitive)) {
+        textedit->setAlignment(Qt::AlignLeft);
+    } else if (action->text().contains("Center", Qt::CaseInsensitive)) {
+        textedit->setAlignment(Qt::AlignCenter);
+    } else if (action->text().contains("Right")) {
+        textedit->setAlignment(Qt::AlignRight);
+    } else if (action->text().contains("Justify", Qt::CaseInsensitive)) {
+        textedit->setAlignment(Qt::AlignJustify);
+    }
 }
