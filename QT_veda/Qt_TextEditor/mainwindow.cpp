@@ -75,6 +75,17 @@ MainWindow::MainWindow(QWidget *parent)
     QMenu *toolbarMenu = windowMenu->addMenu("&Toolbar");
     toolbarMenu->addAction(fileToolBar->toggleViewAction());
 
+    QMenu *editMenu = menubar->addMenu("&Edit");
+    editMenu->addAction(makeAction(":icons/undo.png", tr("Undo"), QKeySequence::Undo, tr("undo"), [textedit](){textedit->undo();} ));
+    editMenu->addAction(makeAction(":icons/undo.png", tr("Redo"), QKeySequence::Redo, tr("redo"), [textedit](){textedit->redo();} ));
+    editMenu->addAction(makeAction(":icons/undo.png", tr("Copy"),QKeySequence::Copy, tr("copy"), [textedit](){textedit->copy();} ));
+    editMenu->addAction(makeAction(":icons/undo.png", tr("Cut"), QKeySequence::Cut, tr("cut"), [textedit](){textedit->cut();} ));
+    editMenu->addAction(makeAction(":icons/undo.png", tr("Paste"), QKeySequence::Paste, tr("paste"), [textedit](){textedit->paste();} ));
+    editMenu->addAction(makeAction(":icons/undo.png", tr("Zoom in"),QKeySequence::ZoomIn, tr("zoom in"), [textedit](){textedit->zoomIn(1);} ));
+    editMenu->addAction(makeAction(":icons/undo.png", tr("Zoom out"),QKeySequence::ZoomOut, tr("zoom out"), [textedit](){textedit->zoomOut(1);} ));
+
+
+
 }
 
 MainWindow::~MainWindow() {}
@@ -108,7 +119,7 @@ QAction *MainWindow::makeAction(QString icon, QString text, T shortCut, QString 
 {
     QAction *newAct = new QAction(text, this);
     if(icon.length()) newAct->setIcon(QIcon(icon));
-    newAct->setShortcut(QString(shortCut));
+    newAct->setShortcut(shortCut);
     newAct->setStatusTip(toolTip);
     connect(newAct, &QAction::triggered, lambda);
     return newAct;
