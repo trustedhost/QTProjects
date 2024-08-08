@@ -11,8 +11,13 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 private:
-    QAction *makeAction(QString icon, QString text, QString shortCut , \
+    template <typename T>
+    QAction *makeAction(QString icon, QString text, T shortCut , \
                         QString toolTip, QObject* recv, const char* slot);
+
+    template <typename T, typename Functor>
+    QAction *makeAction(QString icon, QString text, T shortCut, \
+                        QString toolTip, Functor lambda);
 
 public slots:
     void newFile();
