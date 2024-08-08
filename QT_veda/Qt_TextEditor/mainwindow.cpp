@@ -8,6 +8,9 @@
 #include <QFontComboBox>
 #include <QDoubleSpinBox>
 #include <QtTypes>
+#include <QStatusBar>
+#include <QLabel>
+
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -34,6 +37,16 @@ MainWindow::MainWindow(QWidget *parent)
     fileToolBar->addSeparator();
     // Add action to the ToolBar
     fileToolBar->addAction(quitAct);
+
+
+    //add StatusBar
+    QStatusBar *statusbar = this->statusBar();
+    QLabel *statusLabel = new QLabel(tr("Text Editor"), statusbar);
+    statusLabel->setObjectName("StatusLabel");
+    statusbar->addPermanentWidget(statusLabel);
+    statusbar->showMessage("started", 1500);
+
+
 
 
     //add widget to the toolbar
