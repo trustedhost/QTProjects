@@ -36,6 +36,6 @@ public slots:
     void setTextFont(QFont font);
     void setTextSize(qreal size);
     void setFontWidget();
-
+    void undo();
 };
 #endif // MAINWINDOW_H

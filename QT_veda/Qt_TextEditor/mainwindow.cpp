@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent)
         qDebug() << "let's see";
         qApp->quit();});
 
-    QAction *undoAct = makeAction(":icons/undo.png", tr("Undo"), QKeySequence::Undo, tr("undo"), [textedit](){textedit->undo();});
+    QAction *undoAct = makeAction(":icons/undo.png", tr("Undo"), QKeySequence::Undo, tr("undo"), this, SLOT(undo()));
     QAction *redoAct = makeAction(":icons/redo.png", tr("Redo"), QKeySequence::Redo, tr("redo"), [textedit](){textedit->redo();});
     QAction *copyAct = makeAction(":icons/copy.png", tr("Copy"),QKeySequence::Copy, tr("copy"), [textedit](){textedit->copy();});
     QAction *cutAct = makeAction(":icons/cut.png", tr("Cut"), QKeySequence::Cut, tr("cut"), [textedit](){textedit->cut();}) ;
@@ -224,4 +224,13 @@ void MainWindow::setFontWidget()
     QFont font = textedit->currentFont();
     fontComboBox->setCurrentFont(font);
     sizeSpinBox->setValue(font.pointSizeF());
+}
+
+void MainWindow::undo()
+{
+    QMdiSubWindow* subWindow = mdiArea->currentSubWindow();
+    if (subWindow != nullptr) {
+        QTextEdit* textedit = qobject_cast<QTextEdit*>(subWindow->widget());
+        textedit->undo();
+    }
 }
