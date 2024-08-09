@@ -19,8 +19,9 @@ MainWindow::MainWindow(QWidget *parent)
 {
     // Create a QTextEdit widget and set it as the central widget
     mdiArea = new QMdiArea(this);
+    connect(mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), SLOT(setFontWidget()));
     setCentralWidget(mdiArea);
-#if 1 // edit 메뉴를 수정한 후 0으로 변경 (test 기법임. 0과 1 을 바꿔가면서 테스팅 할 수 있는거임. )
+#if 0 // edit 메뉴를 수정한 후 0으로 변경 (test 기법임. 0과 1 을 바꿔가면서 테스팅 할 수 있는거임. )
     QTextEdit *textedit = new QTextEdit(this);
     mdiArea->addSubWindow(textedit);
 #else
@@ -50,6 +51,21 @@ MainWindow::MainWindow(QWidget *parent)
     QAction *alignJustifyAct = new QAction("&Justify", this);
     connect(alignJustifyAct, SIGNAL(triggered()), SLOT(alignText()));
 
+    QAction *activateNextSubWindowAct = new QAction("&NextWindow", this);
+    connect(activateNextSubWindowAct, &QAction::triggered, mdiArea, &QMdiArea::activateNextSubWindow);
+    QAction *activatePreviousSubWindowAct = new QAction("&PreviousWindow", this);
+    connect(activatePreviousSubWindowAct, &QAction::triggered, mdiArea, &QMdiArea::activatePreviousSubWindow);
+    QAction *cascadeSubWindowsAct = new QAction("&CascadeSubWindows", this);
+    connect(cascadeSubWindowsAct, &QAction::triggered, mdiArea, &QMdiArea::cascadeSubWindows);
+    QAction *closeActiveSubWindowAct = new QAction("&CloseActiveSubWindows", this);
+    connect(closeActiveSubWindowAct, &QAction::triggered, mdiArea, &QMdiArea::closeActiveSubWindow);
+    QAction *closeAllWindowsAct = new QAction("&CloseAllSubWindows", this);
+    connect(closeAllWindowsAct, &QAction::triggered, mdiArea, &QMdiArea::closeAllSubWindows);
+    QAction *tileSubWindowsAct = new QAction("&TileSubWindows", this);
+    connect(tileSubWindowsAct, &QAction::triggered, mdiArea, &QMdiArea::tileSubWindows);
+
+
+
     // Create a ToolBar
     QToolBar *fileToolBar = addToolBar("&File");
     fileToolBar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
@@ -72,12 +88,10 @@ MainWindow::MainWindow(QWidget *parent)
     statusbar->showMessage("started", 1500);
 
 
-
-
     //add widget to the toolbar
-    QFontComboBox *fontComboBox = new QFontComboBox(this);
+    fontComboBox = new QFontComboBox(this);
     connect(fontComboBox, SIGNAL(currentFontChanged(QFont)), SLOT(setTextFont(QFont)));
-    QDoubleSpinBox *sizeSpinBox = new QDoubleSpinBox(this);
+    sizeSpinBox = new QDoubleSpinBox(this);
     connect(sizeSpinBox, SIGNAL(valueChanged(qreal)), SLOT(setTextSize(qreal)));
 
     addToolBarBreak();
@@ -85,6 +99,7 @@ MainWindow::MainWindow(QWidget *parent)
     QToolBar *formatToolbar = addToolBar("&Format");
     formatToolbar->addWidget(fontComboBox);
     formatToolbar->addWidget(sizeSpinBox);
+
 
 
     // Create a menu bar
@@ -116,6 +131,14 @@ MainWindow::MainWindow(QWidget *parent)
     alignMenu->addAction(alignRightAct);
     alignMenu->addAction(alignJustifyAct);
 
+
+    QMenu *mdiLocateMenu = editMenu->addMenu("&MdiLocate");
+    mdiLocateMenu->addAction(activateNextSubWindowAct);
+    mdiLocateMenu->addAction(activatePreviousSubWindowAct);
+    mdiLocateMenu->addAction(cascadeSubWindowsAct);
+    mdiLocateMenu->addAction(closeActiveSubWindowAct);
+    mdiLocateMenu->addAction(closeAllWindowsAct);
+    mdiLocateMenu->addAction(tileSubWindowsAct);
 
 }
 
@@ -193,4 +216,12 @@ void MainWindow::setTextSize(qreal size)
     QFont font = textedit->currentFont();
     font.setPointSizeF(size);
     textedit->setCurrentFont(font);
+}
+
+void MainWindow::setFontWidget()
+{
+    QTextEdit *textedit = qobject_cast<QTextEdit*>(mdiArea->currentSubWindow()->widget());
+    QFont font = textedit->currentFont();
+    fontComboBox->setCurrentFont(font);
+    sizeSpinBox->setValue(font.pointSizeF());
 }

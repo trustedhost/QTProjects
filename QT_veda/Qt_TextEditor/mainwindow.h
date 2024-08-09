@@ -6,6 +6,9 @@
 class QLabel;
 class QTextEdit;
 class QMdiArea;
+class QFontComboBox;
+class QDoubleSpinBox;
+
 
 class MainWindow : public QMainWindow
 {
@@ -24,12 +27,15 @@ private:
                         QString toolTip, Functor lambda);
     // QTextEdit* textedit;
     QMdiArea* mdiArea;
+    QFontComboBox* fontComboBox;
+    QDoubleSpinBox* sizeSpinBox;
 
 public slots:
     QTextEdit *newFile();
     void alignText();
     void setTextFont(QFont font);
     void setTextSize(qreal size);
+    void setFontWidget();
 
 };
 #endif // MAINWINDOW_H
