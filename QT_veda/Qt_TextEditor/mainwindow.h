@@ -8,6 +8,7 @@ class QTextEdit;
 class QMdiArea;
 class QFontComboBox;
 class QDoubleSpinBox;
+class QMdiSubWindow;
 
 
 class MainWindow : public QMainWindow
@@ -29,6 +30,8 @@ private:
     QMdiArea* mdiArea;
     QFontComboBox* fontComboBox;
     QDoubleSpinBox* sizeSpinBox;
+    QList<QAction*> actions;
+    QTextEdit* prevTextEdit = nullptr;
 
 public slots:
     QTextEdit *newFile();
@@ -37,5 +40,12 @@ public slots:
     void setTextSize(qreal size);
     void setFontWidget();
     void undo();
+    void redo();
+    void copy();
+    void cut();
+    void paste();
+    void zoomIn();
+    void zoomOut();
+    void connectWindow(QMdiSubWindow*);
 };
 #endif // MAINWINDOW_H

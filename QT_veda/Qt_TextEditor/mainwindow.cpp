@@ -19,7 +19,8 @@ MainWindow::MainWindow(QWidget *parent)
 {
     // Create a QTextEdit widget and set it as the central widget
     mdiArea = new QMdiArea(this);
-    connect(mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), SLOT(setFontWidget()));
+    connect(mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SLOT(setFontWidget()));
+    connect(mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)), this, SLOT(connectWindow(QMdiSubWindow*)));
     setCentralWidget(mdiArea);
 #if 0 // edit 메뉴를 수정한 후 0으로 변경 (test 기법임. 0과 1 을 바꿔가면서 테스팅 할 수 있는거임. )
     QTextEdit *textedit = new QTextEdit(this);
@@ -34,14 +35,25 @@ MainWindow::MainWindow(QWidget *parent)
         qDebug() << "let's see";
         qApp->quit();});
 
+    //editor 창에 종속. 각각 event 에 해당하는 slot 을 구현하는 방식으로 구현.
     QAction *undoAct = makeAction(":icons/undo.png", tr("Undo"), QKeySequence::Undo, tr("undo"), this, SLOT(undo()));
-    QAction *redoAct = makeAction(":icons/redo.png", tr("Redo"), QKeySequence::Redo, tr("redo"), [textedit](){textedit->redo();});
-    QAction *copyAct = makeAction(":icons/copy.png", tr("Copy"),QKeySequence::Copy, tr("copy"), [textedit](){textedit->copy();});
-    QAction *cutAct = makeAction(":icons/cut.png", tr("Cut"), QKeySequence::Cut, tr("cut"), [textedit](){textedit->cut();}) ;
-    QAction *pasteAct = makeAction(":icons/paste.png", tr("Paste"), QKeySequence::Paste, tr("paste"), [textedit](){textedit->paste();}) ;
-    QAction *zoomInAct = makeAction(":icons/zoomin.png", tr("Zoom in"),QKeySequence::ZoomIn, tr("zoom in"), [textedit](){textedit->zoomIn(1);} );
-    QAction *zoomOutAct = makeAction(":icons/zoomout.png", tr("Zoom out"),QKeySequence::ZoomOut, tr("zoom out"), [textedit](){textedit->zoomOut(1);} );
+    QAction *redoAct = makeAction(":icons/redo.png", tr("Redo"), QKeySequence::Redo, tr("redo"), this, SLOT(redo()));
+    QAction *copyAct = makeAction(":icons/copy.png", tr("Copy"),QKeySequence::Copy, tr("copy"), this, SLOT(copy()));
+    QAction *cutAct = makeAction(":icons/cut.png", tr("Cut"), QKeySequence::Cut, tr("cut"), this, SLOT(cut()));
+    QAction *pasteAct = makeAction(":icons/paste.png", tr("Paste"), QKeySequence::Paste, tr("paste"), this, SLOT(paste()));
+    QAction *zoomInAct = makeAction(":icons/zoomin.png", tr("Zoom in"),QKeySequence::ZoomIn, tr("zoom in"), this, SLOT(zoomIn()));
+    QAction *zoomOutAct = makeAction(":icons/zoomout.png", tr("Zoom out"),QKeySequence::ZoomOut, tr("zoom out"), this, SLOT(zoomOut()));
 
+    actions.append(undoAct);
+    actions.append(redoAct);
+    actions.append(copyAct);
+    actions.append(cutAct);
+    actions.append(pasteAct);
+    actions.append(zoomInAct);
+    actions.append(zoomOutAct);
+
+
+    //editor 창에 종속. 하나의 slot 에서 event 를 처리하는 방식으로 구현.
     QAction *alignCenterAct = new QAction("&Center", this);
     connect(alignCenterAct, SIGNAL(triggered()), SLOT(alignText()));
     QAction *alignLeftAct = new QAction("&Left", this);
@@ -51,6 +63,7 @@ MainWindow::MainWindow(QWidget *parent)
     QAction *alignJustifyAct = new QAction("&Justify", this);
     connect(alignJustifyAct, SIGNAL(triggered()), SLOT(alignText()));
 
+    //mdi window 에 종속.
     QAction *activateNextSubWindowAct = new QAction("&NextWindow", this);
     connect(activateNextSubWindowAct, &QAction::triggered, mdiArea, &QMdiArea::activateNextSubWindow);
     QAction *activatePreviousSubWindowAct = new QAction("&PreviousWindow", this);
@@ -63,7 +76,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(closeAllWindowsAct, &QAction::triggered, mdiArea, &QMdiArea::closeAllSubWindows);
     QAction *tileSubWindowsAct = new QAction("&TileSubWindows", this);
     connect(tileSubWindowsAct, &QAction::triggered, mdiArea, &QMdiArea::tileSubWindows);
-
 
 
     // Create a ToolBar
@@ -191,39 +203,51 @@ QAction *MainWindow::makeAction(QString icon, QString text, T shortCut, QString 
 
 void MainWindow::alignText()
 {
-    QTextEdit *textedit = qobject_cast<QTextEdit*>(mdiArea->currentSubWindow()->widget());
-    QAction *action = qobject_cast<QAction*>(sender());
-    if(action->text().contains("Left", Qt::CaseInsensitive)) {
+    QMdiSubWindow* subWindow = mdiArea->currentSubWindow();
+    if (subWindow != nullptr) {
+        QTextEdit *textedit = qobject_cast<QTextEdit*>(subWindow->widget());
+        QAction *action = qobject_cast<QAction*>(sender());
+        if(action->text().contains("Left", Qt::CaseInsensitive)) {
         textedit->setAlignment(Qt::AlignLeft);
-    } else if (action->text().contains("Center", Qt::CaseInsensitive)) {
+        } else if (action->text().contains("Center", Qt::CaseInsensitive)) {
         textedit->setAlignment(Qt::AlignCenter);
-    } else if (action->text().contains("Right")) {
+        } else if (action->text().contains("Right", Qt::CaseInsensitive)) {
         textedit->setAlignment(Qt::AlignRight);
-    } else if (action->text().contains("Justify", Qt::CaseInsensitive)) {
+        } else if (action->text().contains("Justify", Qt::CaseInsensitive)) {
         textedit->setAlignment(Qt::AlignJustify);
+        }
     }
 }
 
 void MainWindow::setTextFont(QFont font)
 {
-    QTextEdit *textedit = qobject_cast<QTextEdit*>(mdiArea->currentSubWindow()->widget());
-    textedit->setCurrentFont(font);
+    QMdiSubWindow* subWindow = mdiArea->currentSubWindow();
+    if (subWindow != nullptr) {
+        QTextEdit *textedit = qobject_cast<QTextEdit*>(subWindow->widget());
+        textedit->setCurrentFont(font);
+    }
 }
 
 void MainWindow::setTextSize(qreal size)
 {
-    QTextEdit *textedit = qobject_cast<QTextEdit*>(mdiArea->currentSubWindow()->widget());
-    QFont font = textedit->currentFont();
-    font.setPointSizeF(size);
-    textedit->setCurrentFont(font);
+    QMdiSubWindow* subWindow = mdiArea->currentSubWindow();
+    if (subWindow != nullptr) {
+        QTextEdit *textedit = qobject_cast<QTextEdit*>(subWindow->widget());
+        QFont font = textedit->currentFont();
+        font.setPointSizeF(size);
+        textedit->setCurrentFont(font);
+    }
 }
 
 void MainWindow::setFontWidget()
 {
-    QTextEdit *textedit = qobject_cast<QTextEdit*>(mdiArea->currentSubWindow()->widget());
-    QFont font = textedit->currentFont();
-    fontComboBox->setCurrentFont(font);
-    sizeSpinBox->setValue(font.pointSizeF());
+    QMdiSubWindow* subWindow = mdiArea->currentSubWindow();
+    if (subWindow != nullptr) {
+        QTextEdit *textedit = qobject_cast<QTextEdit*>(subWindow->widget());
+        QFont font = textedit->currentFont();
+        fontComboBox->setCurrentFont(font);
+        sizeSpinBox->setValue(font.pointSizeF());
+    }
 }
 
 void MainWindow::undo()
@@ -232,5 +256,93 @@ void MainWindow::undo()
     if (subWindow != nullptr) {
         QTextEdit* textedit = qobject_cast<QTextEdit*>(subWindow->widget());
         textedit->undo();
+    }
+}
+
+void MainWindow::redo()
+{
+    QMdiSubWindow* subWindow = mdiArea->currentSubWindow();
+    if (subWindow != nullptr) {
+        QTextEdit* textedit = qobject_cast<QTextEdit*>(subWindow->widget());
+        textedit->redo();
+    }
+}
+
+void MainWindow::copy()
+{
+    QMdiSubWindow* subWindow = mdiArea->currentSubWindow();
+    if (subWindow != nullptr) {
+        QTextEdit* textedit = qobject_cast<QTextEdit*>(subWindow->widget());
+        textedit->copy();
+    }
+}
+
+void MainWindow::cut()
+{
+
+    QMdiSubWindow* subWindow = mdiArea->currentSubWindow();
+    if (subWindow != nullptr) {
+        QTextEdit* textedit = qobject_cast<QTextEdit*>(subWindow->widget());
+        textedit->cut();
+    }
+}
+
+void MainWindow::paste()
+{
+    QMdiSubWindow* subWindow = mdiArea->currentSubWindow();
+    if (subWindow != nullptr) {
+        QTextEdit* textedit = qobject_cast<QTextEdit*>(subWindow->widget());
+        textedit->paste();
+    }
+
+}
+
+void MainWindow::zoomIn()
+{
+    QMdiSubWindow* subWindow = mdiArea->currentSubWindow();
+    if (subWindow != nullptr) {
+        QTextEdit* textedit = qobject_cast<QTextEdit*>(subWindow->widget());
+        textedit->zoomIn();
+    }
+
+}
+
+void MainWindow::zoomOut()
+{
+    QMdiSubWindow* subWindow = mdiArea->currentSubWindow();
+    if (subWindow != nullptr) {
+        QTextEdit* textedit = qobject_cast<QTextEdit*>(subWindow->widget());
+        textedit->zoomOut();
+    }
+
+}
+
+void MainWindow::connectWindow(QMdiSubWindow * window)
+{
+    // qDebug() << actions;
+    if (window == nullptr) {
+        prevTextEdit = nullptr;
+    } else {
+        QTextEdit *textEdit = qobject_cast<QTextEdit*>(window->widget());
+
+        if (prevTextEdit != nullptr) {
+            for(QAction* action : actions) {
+                action->disconnect(prevTextEdit);
+            }
+        }
+        prevTextEdit = textEdit;
+        const char* methods[7] = {
+            SLOT(undo()),
+            SLOT(redo()),
+            SLOT(copy()),
+            SLOT(cut()),
+            SLOT(paste()),
+            SLOT(zoomIn()),
+            SLOT(zoomOut())
+        };
+        int cnt = 0;
+        Q_FOREACH(QAction* action, actions) {
+            connect(action, SIGNAL(triggered()), textEdit, methods[cnt++]);
+        }
     }
 }
